@@ -1,0 +1,27 @@
+apply {
+    plugin 'scala'
+    plugin 'idea'
+    plugin 'application'
+}
+
+version = '0.1.0'
+group = 'xyz.nabijaczleweli.gen_epub_book'
+mainClassName = "xyz.nabijaczleweli.gen_epub_book.Main"
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+}
+
+run {
+    if (project.hasProperty("appArgs")) {
+        args Eval.me(appArgs)
+    }
+}
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.12.1'
+    testCompile 'junit:junit:4.12'
+}

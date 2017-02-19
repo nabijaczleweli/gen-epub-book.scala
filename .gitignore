@@ -7,7 +7,7 @@
 !src/**
 !.gitignore
 !.travis.yml
-!*gradlew*
+!*gradle*
 !README.md
 !LICENSE
 !Makefile
