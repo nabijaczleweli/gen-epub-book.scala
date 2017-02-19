@@ -1,0 +1,12 @@
+*
+!examples
+!examples/**
+!gradle
+!gradle/**
+!src
+!src/**
+!.gitignore
+!.travis.yml
+!*gradlew*
+!README.md
+!LICENSE
