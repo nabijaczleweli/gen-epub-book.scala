@@ -1,15 +1,19 @@
 package xyz.nabijaczleweli.gen_epub_book.book
 
-import java.io.File
+import java.io._
+import java.net.{HttpURLConnection, URLConnection}
 import java.text.ParseException
+import java.util.zip.{ZipEntry, ZipOutputStream}
 import java.util.{Date, UUID}
 
-import xyz.nabijaczleweli.gen_epub_book.Util
+import xyz.nabijaczleweli.gen_epub_book.{Assets, Util}
+
+import scala.io.Source
 
 class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Element]) {
-	val id = UUID.randomUUID
-	var content: List[Content] = Nil
-	var nonContent: List[Content] = Nil
+	private val id = UUID.randomUUID
+	private var content: List[Content] = Nil
+	private var nonContent: List[Content] = Nil
 
 	var name: String = _
 	var cover: Content = _
@@ -80,6 +84,127 @@ class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Ele
 		throw new ParseException("Required key Author not specified", elems.length)
 	if(date	== null)
 		throw new ParseException("Required key Date not specified", elems.length)
-	if(language== null)
+	if(language == null)
 		throw new ParseException("Required key Language not specified", elems.length)
+
+	def write(to: File): Unit = {
+		val out = new ZipOutputStream(new FileOutputStream(to))
+		out setLevel 9
+
+		out putNextEntry new ZipEntry("META-INF/container.xml")
+		out write Assets.containerXMLContents.getBytes
+		out.closeEntry()
+
+		out putNextEntry new ZipEntry("mimetype")
+		out write Assets.mimeType.getBytes
+		out.closeEntry()
+
+		writeContentTable(out)
+		writeTOC(out)
+		writeContent(out)
+
+		out.close()
+	}
+
+	private def writeContentTable(to: ZipOutputStream): Unit = {
+		val n = '\n'
+
+		to putNextEntry new ZipEntry("content.opf")
+
+		to write Assets.contentOPFHeader.getBytes
+		to write s"""    <dc:title>$name</dc:title>$n""".getBytes
+		to write s"""    <dc:creator opf:role="aut">$author</dc:creator>$n""".getBytes
+		to write s"""    <dc:identifier id="uuid" opf:scheme="uuid">$id</dc:identifier>$n""".getBytes
+		to write s"""    <dc:date>${Util.dateFormat format date}</dc:date>$n""".getBytes
+		to write s"""    <dc:language>$language</dc:language>$n""".getBytes
+
+		if(cover != null)
+			to write s"""    <meta name="cover" content="${cover.id}" />$n""".getBytes
+
+		to write s"""  </metadata>$n""".getBytes
+		to write s"""  <manifest>$n""".getBytes
+		to write s"""    <item href="toc.ncx" id="toc" media-type="application/x-dtbncx+xml" />$n""".getBytes
+
+		var specIds: Set[String] = Nil.toSet
+		((cover :: Nil) ++ content ++ nonContent).iterator filter (_ != null) filter (e => !specIds.contains(e.id)) foreach { elem =>
+			to write s"""    <item href="${elem.filename}" id="${elem.id}" media-type="${URLConnection guessContentTypeFromName elem.filename}" />$n""".getBytes
+			specIds += elem.id
+		}
+
+		to write s"""  </manifest>$n""".getBytes
+		to write s"""  <spine toc="toc">$n""".getBytes
+
+		content foreach { elem =>
+			to write s"""    <itemref idref="${elem.id}" />$n""".getBytes
+		}
+
+		to write s"""  </spine>$n""".getBytes
+		to write s"""  <guide>$n""".getBytes
+
+		if(cover != null)
+			to write s"""    <reference xmlns="http://www.idpf.org/2007/opf" href="${cover.filename}" title="${cover.id}" type="cover" />$n""".getBytes
+
+		to write s"""    <reference href="toc.ncx" title="Table of Contents" type="toc" />$n""".getBytes
+		to write s"""  </guide>$n""".getBytes
+		to write s"""</package>$n""".getBytes
+
+		to.closeEntry()
+	}
+
+	private def writeTOC(to: ZipOutputStream): Unit = {
+		val n = '\n'
+
+		to putNextEntry new ZipEntry("toc.ncx")
+
+		to write s"""<?xml version='1.0' encoding='utf-8'?>$n""".getBytes
+		to write s"""<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="$language">$n""".getBytes
+		to write s"""  <head>$n""".getBytes
+		to write s"""    <meta content="$id" name="dtb:uid"/>$n""".getBytes
+		to write s"""    <meta content="2" name="dtb:depth"/>$n""".getBytes
+		to write s"""  </head>$n""".getBytes
+		to write s"""  <docTitle>$n""".getBytes
+		to write s"""    <text>$name</text>$n""".getBytes
+		to write s"""  </docTitle>$n""".getBytes
+		to write s"""  <navMap>$n""".getBytes
+
+		(content.iterator filter (_.content.isInstanceOf[PathContent])
+			flatMap (e => Util findTitle e.content.asInstanceOf[PathContent].path map ((_, e.id, e.filename)))).zipWithIndex foreach { e =>
+			val ((title, id, fname), i) = e
+			to write s"""    <navPoint id="${UUID.randomUUID}" playOrder="$i">$n""".getBytes
+			to write s"""      <navLabel>$n""".getBytes
+			to write s"""        <text>$title</text>$n""".getBytes
+			to write s"""      </navLabel>$n""".getBytes
+			to write s"""      <content src="$fname" />$n""".getBytes
+			to write s"""    </navPoint>$n""".getBytes
+		}
+
+		to write s"""  </navMap>$n""".getBytes
+		to write s"""</ncx>$n""".getBytes
+
+		to.closeEntry()
+	}
+
+	private def writeContent(to: ZipOutputStream): Unit = {
+		var specFilenames: Set[String] = Nil.toSet
+		((cover :: Nil) ++ content ++ nonContent).iterator filter (_ != null) filter (e => !specFilenames.contains(e.filename)) foreach { elem =>
+			to putNextEntry new ZipEntry(elem.filename)
+
+			elem.content match {
+				case PathContent(p) =>
+					val bis = new BufferedInputStream(new FileInputStream(p))
+					to write (Stream continually bis.read takeWhile (_ != -1) map (_.toByte)).toArray
+				case NetworkContent(u) =>
+					val connection = u.openConnection().asInstanceOf[HttpURLConnection]
+					connection.setRequestMethod("GET")
+					to write (Stream continually connection.getInputStream.read takeWhile (_ != -1) map (_.toByte)).toArray
+				case StringContent(d) =>
+					to write Assets.stringContentHead.getBytes
+					to write d.getBytes
+					to write Assets.stringContentTail.getBytes
+			}
+
+			to.closeEntry()
+			specFilenames += elem.filename
+		}
+	}
 }

@@ -1,8 +1,9 @@
 package xyz.nabijaczleweli.gen_epub_book.book
 
 import java.net.URL
-import java.text.SimpleDateFormat
 import java.util.Date
+
+import xyz.nabijaczleweli.gen_epub_book.Util
 
 sealed trait Element
 case class NameElement(n: String) extends Element
@@ -17,8 +18,6 @@ case class DateElement(d: Date) extends Element
 case class LanguageElement(l: String) extends Element
 
 object Element {
-	private val dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
-
 	def parseLine(line: String): Option[Element] = {
 		val chunks = line.split(":", 2)
 		if(chunks.length < 2)
@@ -34,7 +33,7 @@ object Element {
 				case "Cover" => CoverElement(ch.next)
 				case "Network-Cover" => NetworkCoverElement(new URL(ch.next))
 				case "Author" => AuthorElement(ch.next)
-				case "Date" => DateElement(dateFormat.parse(ch.next))
+				case "Date" => DateElement(Util.dateFormat parse ch.next)
 				case "Language" => LanguageElement(ch.next)
 				case _ => return None
 			})
