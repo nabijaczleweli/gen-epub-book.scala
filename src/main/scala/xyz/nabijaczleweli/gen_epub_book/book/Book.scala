@@ -8,8 +8,6 @@ import java.util.{Date, UUID}
 
 import xyz.nabijaczleweli.gen_epub_book.{Assets, Util}
 
-import scala.io.Source
-
 class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Element]) {
 	private val id = UUID.randomUUID
 	private var content: List[Content] = Nil

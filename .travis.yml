@@ -25,7 +25,7 @@ deploy:
   provider: releases
   api-key:
     secure: foeF5/EeyDgKJwXaaSqRRFlFd8VZMEaunDlBDNx5HciamDbg+VyDEfHqJXFZcSeKWL77EP/2pRwv6dnpMRCKvI/HUGX6AEzZWGXweyEHZP6UX2Rq7pNgvS7k4eoXDpEDlroT2/8nOW+LjPi0sHVshcmwXB/k/cDChk5ux/YGjOzYSGA0Kn5rrWGlpjhXQ8F/uO9etzKoQkPc8X7x7qgoZaoiU5q75gPzptXje/S/R1+avHLybpbE/6tbpzlNxs3zz01aD/1Vl8u8PC9BVbwWBFAcSVjTDXosf+u+Uo7LAq7rJ4lwh0ZEYt5kt7+/eO7/Rj7eZ8YV6X0IYCpQMcv6wPpSM4609mVm/Iq2sPjebcORz9OW1X+R4Fo5iDzQgkVn/ryfgn96Srre6wBo+iX8eCdqDhuHaKOYJj7vl3mCB7mYtWa/WHP7ZpKYlgUglluCNL4xWpLnJ+E+5J0QWiSYsBG1O3oQEK7JRNBLOiHSB97Rom9T2TH09Ny8DDNhqVJLVO9BP5d561vKJU9x1o1GSSJpH745pMZVUQqbqAbHMIQ2JH7N0+SuCfnBCE8vs19GCwhQtoDiyIQfunjbG7s5+4LwzSwKLFK0h+2UXOhe0yUOh63rngKm1rVfwqOgNQP9LcY1xKfyEs41o3rUfHCqMuSddyEWQpKcu8sg9bqgbDI=
-  file: "build/distributions/*.tar"
+  file: "build/distributions/gen-epub-book.scala-${TRAVIS_TAG#v}.tar"
   skip_cleanup: true
   on:
     tags: true

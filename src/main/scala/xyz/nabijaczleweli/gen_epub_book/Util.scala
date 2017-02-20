@@ -11,19 +11,19 @@ object Util {
 	private val titleRgx = Pattern.compile("""<!-- ePub title: "([^"]+)" -->""")
 	val dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
 
-	def pathId(of: String): String = {
-		val f = pathFilename(of)
+	def pathId(of: String): String =
+		pathFilename(of).replace('.', '-')
+
+	def pathFilename(of: String): String =
+		of.replace('\\', '/').replace("../", "").replace("./", "").replace('/', '-')
+
+	def urlId(of: URL): String = {
+		val f = urlFilename(of)
 		f.lastIndexOf('.') match {
 			case -1 => f
 			case i => f.substring(0, i)
 		}
 	}
-
-	def pathFilename(of: String): String =
-		of.replace('\\', '/').replace("../", "").replace("./", "").replace('/', '-')
-
-	def urlId(of: URL): String =
-		pathId(urlFilename(of))
 
 	def urlFilename(of: URL): String =
 		of.getFile.substring(of.getFile.lastIndexOf('/') + 1)

@@ -31,6 +31,7 @@ CALIBRE_CONVERT := ebook-convert
 OUTDIR := out/
 
 BOOK_SOURCES := $(sort $(wildcard examples/*.epupp examples/**/*.epupp examples/**/**/*.epupp examples/**/**/**/*.epupp))
+SOURCES := $(sort $(wildcard src/*.scala src/**/*.scala src/**/**/*.scala src/**/**/**/*.scala src/**/**/**/**/*.scala src/**/**/**/**/**/*.scala src/**/**/**/**/**/**/*.scala src/**/**/**/**/**/**/**/*.scala))
 
 .PHONY : all examples
 
@@ -40,12 +41,11 @@ all : examples
 clean :
 	rm -rf $(OUTDIR)
 
-examples : $(patsubst examples/%.epupp,$(OUTDIR)%.epub,$(BOOK_SOURCES)) $(patsubst examples/%.epupp,$(OUTDIR)%.mobi,$(BOOK_SOURCES))
+examples : $(SOURCES) $(patsubst examples/%.epupp,$(OUTDIR)%.epub,$(BOOK_SOURCES)) $(patsubst examples/%.epupp,$(OUTDIR)%.mobi,$(BOOK_SOURCES))
 
 $(OUTDIR)%.mobi : $(OUTDIR)%.epub
-	@mkdir -p $(dir $(TEMP_DIR)/$(subst $(OUTDIR),,$^))
 	$(CALIBRE_CONVERT) "$^" "$@"
 
-$(OUTDIR)%.epub : examples/%.epupp
+$(OUTDIR)%.epub : examples/%.epupp $(SOURCES)
 	@mkdir -p $(dir $@)
-	$(GRADLE) run -PappArgs="['$^', '$@']"
+	$(GRADLE) run -PappArgs="['$<', '$@']"
