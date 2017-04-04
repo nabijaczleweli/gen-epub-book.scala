@@ -59,6 +59,14 @@ class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Ele
 					throw new ParseException("[Network-]Cover key specified at least twice.", idx)
 				else
 					cover = Content(s"network-cover-${Util urlId u}", Util urlFilename u, NetworkContent(u))
+			case IncludeElement(p) =>
+				val c = new File(relativeDirectoryRoot + p)
+				if(!c.exists || !c.isFile)
+					throw new ParseException(s"Include file '$p' nonexistant.", 0)
+				else
+					nonContent :+= Content(Util pathId p, Util pathFilename p, PathContent(c))
+			case NetworkIncludeElement(u) =>
+				nonContent :+= Content(Util urlId u, Util urlFilename u, NetworkContent(u))
 			case AuthorElement(l) =>
 				if(author != null)
 					throw new ParseException("Author key specified at least twice.", idx)

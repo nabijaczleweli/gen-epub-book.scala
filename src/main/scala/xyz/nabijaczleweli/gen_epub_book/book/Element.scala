@@ -13,6 +13,8 @@ case class ImageContentElement(p: String) extends Element
 case class NetworkImageContentElement(u: URL) extends Element
 case class CoverElement(p: String) extends Element
 case class NetworkCoverElement(u: URL) extends Element
+case class IncludeElement(p: String) extends Element
+case class NetworkIncludeElement(u: URL) extends Element
 case class AuthorElement(a: String) extends Element
 case class DateElement(d: Date) extends Element
 case class LanguageElement(l: String) extends Element
@@ -32,6 +34,8 @@ object Element {
 				case "Network-Image-Content" => NetworkImageContentElement(new URL(ch.next))
 				case "Cover" => CoverElement(ch.next)
 				case "Network-Cover" => NetworkCoverElement(new URL(ch.next))
+				case "Include" => IncludeElement(ch.next)
+				case "Network-Include" => NetworkIncludeElement(new URL(ch.next))
 				case "Author" => AuthorElement(ch.next)
 				case "Date" => DateElement(Util.dateFormat parse ch.next)
 				case "Language" => LanguageElement(ch.next)
