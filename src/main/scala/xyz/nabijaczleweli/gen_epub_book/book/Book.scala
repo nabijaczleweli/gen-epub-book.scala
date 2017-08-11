@@ -1,7 +1,7 @@
 package xyz.nabijaczleweli.gen_epub_book.book
 
 import java.io._
-import java.net.{HttpURLConnection, URLConnection}
+import java.net.HttpURLConnection
 import java.text.ParseException
 import java.util.zip.{ZipEntry, ZipOutputStream}
 import java.util.{Date, UUID}
@@ -39,26 +39,37 @@ class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Ele
 				if(!c.exists || !c.isFile)
 					throw new ParseException(s"Image-Content file '$p' nonexistant.", 0)
 				else {
-					nonContent :+= Content(Util pathId p, Util pathFilename p, PathContent(c))
-					content :+= Content(s"image-content-$idx", s"image-data-$idx.html", StringContent(s"""<center><img src="${Util pathFilename p}"></img></center>"""))
+					val fname = Util pathFilename p
+					nonContent :+= Content(Util pathId p, fname, PathContent(c))
+					content :+= Content(s"image-content-$idx", s"image-data-$idx.html", StringContent(
+						s"""<center><img src="$fname" alt="$fname"></img></center>"""))
 				}
 			case NetworkImageContentElement(u) =>
+				val fname = Util urlFilename u
 				nonContent :+= Content(Util urlId u, Util urlFilename u, NetworkContent(u))
 				content :+= Content(s"network-image-content-$idx", s"network-image-data-$idx.html",
-					StringContent(s"""<center><img src="${Util urlFilename u}"></img></center>"""))
+					StringContent(s"""<center><img src="$fname" alt="$fname"></img></center>"""))
 			case CoverElement(p) =>
 				if(cover != null)
 					throw new ParseException("[Network-]Cover key specified at least twice.", idx)
 				val c = new File(relativeDirectoryRoot + p)
 				if(!c.exists || !c.isFile)
 					throw new ParseException(s"Cover file '$p' nonexistant.", 0)
-				else
-					cover = Content(Util pathId p, Util pathFilename p, PathContent(c))
+				else {
+					val fname = Util pathFilename p
+					nonContent :+= Content(Util pathId p, fname, PathContent(c))
+					cover = Content(s"cover-content", s"cover-data.html", StringContent(
+							s"""<center><img src="$fname" alt="$fname"></img></center>"""))
+				}
 			case NetworkCoverElement(u) =>
 				if(cover != null)
 					throw new ParseException("[Network-]Cover key specified at least twice.", idx)
-				else
-					cover = Content(s"network-cover-${Util urlId u}", Util urlFilename u, NetworkContent(u))
+				else{
+					val fname = Util urlFilename u
+					nonContent :+= Content(s"network-cover-${Util urlId u}", fname, NetworkContent(u))
+					cover = Content(s"network-cover-content", s"network-cover-data.html", StringContent(
+						s"""<center><img src="$fname" alt="$fname"></img></center>"""))
+				}
 			case IncludeElement(p) =>
 				val c = new File(relativeDirectoryRoot + p)
 				if(!c.exists || !c.isFile)
@@ -84,14 +95,15 @@ class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Ele
 					language = l
 		}
 
-	if(name	== null)
-		throw new ParseException("Required key Name not specified", elems.length)
-	if(author	== null)
-		throw new ParseException("Required key Author not specified", elems.length)
-	if(date	== null)
-		throw new ParseException("Required key Date not specified", elems.length)
-	if(language == null)
-		throw new ParseException("Required key Language not specified", elems.length)
+	for((key, name) <- (name, "Name") :: (author, "Author") :: (date, "Date") :: (language, "Language") :: Nil)
+		if(key	== null)
+			throw new ParseException(s"Required key $name not specified", elems.length)
+
+	((cover :: Nil) ++ content ++ nonContent).iterator filter (_ != null) foreach { elem =>
+		if((Util guessMimeType elem.filename) == null)
+			throw new ParseException(s"""File "${elem.filename}" is not of recognised extension.""", elems.length)
+	}
+
 
 	def write(to: File): Unit = {
 		val out = new ZipOutputStream(new FileOutputStream(to))
@@ -133,7 +145,7 @@ class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Ele
 
 		var specIds: Set[String] = Nil.toSet
 		((cover :: Nil) ++ content ++ nonContent).iterator filter (_ != null) filter (e => !specIds.contains(e.id)) foreach { elem =>
-			to write s"""    <item href="${elem.filename}" id="${elem.id}" media-type="${URLConnection guessContentTypeFromName elem.filename}" />$n""".getBytes
+			to write s"""    <item href="${elem.filename}" id="${elem.id}" media-type="${Util guessMimeType elem.filename}" />$n""".getBytes
 			specIds += elem.id
 		}
 
@@ -176,7 +188,7 @@ class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Ele
 		(content.iterator filter (_.content.isInstanceOf[PathContent])
 			flatMap (e => Util findTitle e.content.asInstanceOf[PathContent].path map ((_, e.id, e.filename)))).zipWithIndex foreach { e =>
 			val ((title, id, fname), i) = e
-			to write s"""    <navPoint id="${UUID.randomUUID}" playOrder="$i">$n""".getBytes
+			to write s"""    <navPoint id="$title" playOrder="$i">$n""".getBytes
 			to write s"""      <navLabel>$n""".getBytes
 			to write s"""        <text>$title</text>$n""".getBytes
 			to write s"""      </navLabel>$n""".getBytes

@@ -1,12 +1,9 @@
 package xyz.nabijaczleweli.gen_epub_book
 
-import java.io.{File, PrintWriter}
+import java.io.File
 import java.text.ParseException
 
 import org.junit.Test
-import xyz.nabijaczleweli.gen_epub_book.Settings
-
-import scala.io.Source
 
 class SettingsTests {
 	@Test

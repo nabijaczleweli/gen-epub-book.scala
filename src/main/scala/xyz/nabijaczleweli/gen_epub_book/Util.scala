@@ -8,21 +8,20 @@ import java.util.regex.Pattern
 import scala.io.Source
 
 object Util {
+	private lazy val mimeTypeMap =
+		Assets.mimeTypes.lines filterNot (_ startsWith "#") map (_ split " ") map (kvs => ((kvs.iterator drop 1).toSeq, kvs(0))) flatMap (kvs =>
+			kvs._1 map ((_, kvs._2))) toMap
 	private val titleRgx = Pattern.compile("""<!-- ePub title: "([^"]+)" -->""")
 	val dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
 
 	def pathId(of: String): String =
-		pathFilename(of).replace('.', '-')
+		pathFilename(of).replace('.', '_')
 
 	def pathFilename(of: String): String =
 		of.replace('\\', '/').replace("../", "").replace("./", "").replace('/', '-')
 
 	def urlId(of: URL): String = {
-		val f = urlFilename(of)
-		f.lastIndexOf('.') match {
-			case -1 => f
-			case i => f.substring(0, i)
-		}
+		urlFilename(of).replace('.', '_')
 	}
 
 	def urlFilename(of: URL): String =
@@ -30,4 +29,7 @@ object Util {
 
 	def findTitle(in: File): Option[String] =
 		(Source fromFile in).getLines map titleRgx.matcher find (_.matches) map (_ group 1)
+
+	def guessMimeType(fname: String): String =
+		mimeTypeMap.getOrElse(fname substring (1 + fname lastIndexOf '.'), null)
 }
