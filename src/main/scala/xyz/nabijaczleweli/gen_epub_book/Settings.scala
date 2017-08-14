@@ -9,6 +9,7 @@ class Settings(private val args: Array[String]) {
 	var inFile: File = _
 	var outFile: File = _
 	var includeDirs: List[IncludeDirectory] = Nil
+	var separator: String = ":"
 
 	for(arg <- args)
 		arg match {
@@ -26,7 +27,7 @@ class Settings(private val args: Array[String]) {
 					case 1 =>
 						Settings getSingleOpt arg match {
 							case ('I', incdir) =>
-							incdir.split("=", 2) match {
+								incdir.split("=", 2) match {
 									case Array(path) =>
 										includeDirs :+= new IncludeDirectory(None, new File(path))
 									case Array("", _) =>
@@ -36,6 +37,8 @@ class Settings(private val args: Array[String]) {
 									case _ =>
 										printAndQuit()
 								}
+							case ('S', sep) =>
+								separator = sep
 							case (_, _) =>
 								printAndQuit()
 						}
@@ -59,12 +62,15 @@ class Settings(private val args: Array[String]) {
 
 	private lazy val usage =
 		s"""USAGE:
-			|   gen-epub-book [-I <include directory>]... [-h] <input file> <output file>
+			|   gen-epub-book [-I<include directory>]... [-S<separator>] [-h] <input file> <output file>
 			|
 			|Where:
 			|
 			|   -I[name=]path
 			|     Add an include directory
+			|
+			|   -Sseparator
+			|     Override separator. Default: ":"
 			|
 			|   -h, --help
 			|     Displays usage information and exits.
@@ -76,7 +82,7 @@ class Settings(private val args: Array[String]) {
 			|     (required) File to write the book to
 			|
 			|gen-epub-book.scala -- generate an ePub book from a simple plaintext descriptor
-			|https://nabijaczleweli.xyz/content/gen-epub-book
+			|                       https://nabijaczleweli.xyz/content/gen-epub-book
 		""".stripMargin
 
 	private def printAndQuit(): Unit = {

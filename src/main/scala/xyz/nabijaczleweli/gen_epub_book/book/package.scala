@@ -5,6 +5,6 @@ import java.io.File
 import scala.io.Source
 
 package object book {
-	def load(from: File): Seq[Element] =
-		((Source fromFile from).getLines flatMap Element.parseLine).toList
+	def load(from: File, separator: String = ":"): Seq[Element] =
+		((Source fromFile from).getLines flatMap (l => Element.parseLine(l, separator))).toList
 }

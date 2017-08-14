@@ -20,8 +20,8 @@ case class DateElement(d: Date) extends Element
 case class LanguageElement(l: String) extends Element
 
 object Element {
-	def parseLine(line: String): Option[Element] = {
-		val chunks = line.split(":", 2)
+	def parseLine(line: String, separator: String = ":"): Option[Element] = {
+		val chunks = line.split(separator, 2)
 		if(chunks.length < 2)
 			None
 		else {
