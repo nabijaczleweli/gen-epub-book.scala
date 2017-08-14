@@ -25,6 +25,16 @@ gen-epub-book.jar example/test.epupp out/test.epub
 
 For more detailed usage information and tag list, see the [original manpage](https://cdn.rawgit.com/nabijaczleweli/gen-epub-book/man/gen-epub-book.awk.1.html).
 
+## Supported features
+
+#### [`-I`nclude dirs](https://nabijaczleweli.xyz/content/gen-epub-book/programmer.html#features-include-dirs)
+
+Via `-I` switch with `[name=]path` format.
+
+#### [Custom separator](https://nabijaczleweli.xyz/content/gen-epub-book/programmer.html#features-custom-separator)
+
+Via `-S` switch.
+
 ## Versions in other languages
 
 The original in [AWK](https://github.com/nabijaczleweli/gen-epub-book).
