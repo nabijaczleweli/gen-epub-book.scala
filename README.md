@@ -1,4 +1,4 @@
-# gen-epub-book.scala [![Build Status](https://travis-ci.org/nabijaczleweli/gen-epub-book.scala.svg?branch=master)](https://travis-ci.org/nabijaczleweli/gen-epub-book.scala) [![Licence](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+# [gen-epub-book](https://nabijaczleweli.xyz/content/gen-epub-book).scala [![Build Status](https://travis-ci.org/nabijaczleweli/gen-epub-book.scala.svg?branch=master)](https://travis-ci.org/nabijaczleweli/gen-epub-book.scala) [![Licence](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 Generate an ePub book from a simple plaintext descriptor.
 
 ## Quickstart

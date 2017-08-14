@@ -6,9 +6,10 @@ import java.text.ParseException
 import java.util.zip.{ZipEntry, ZipOutputStream}
 import java.util.{Date, UUID}
 
+import xyz.nabijaczleweli.gen_epub_book.feature.IncludeDirectory
 import xyz.nabijaczleweli.gen_epub_book.{Assets, Util}
 
-class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Element]) {
+class Book(private val includeOrder: List[IncludeDirectory], private val elems: Seq[Element]) {
 	private val id = UUID.randomUUID
 	private var content: List[Content] = Nil
 	private var nonContent: List[Content] = Nil
@@ -27,22 +28,20 @@ class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Ele
 				else
 					name = n
 			case ContentElement(p) =>
-				val c = new File(relativeDirectoryRoot + p)
-				if(!c.exists || !c.isFile)
-					throw new ParseException(s"Content file '$p' nonexistant.", 0)
-				else
-					content :+= Content(Util pathId p, Util pathFilename p, PathContent(c))
+				IncludeDirectory.find(includeOrder, p) match {
+					case None => throw new ParseException(s"Content file '$p' not found.", 0)
+					case Some(dir) => content :+= Content(dir ebookID p, dir ebookPath p, PathContent(dir resolve p))
+				}
 			case StringContentElement(s) =>
 				content :+= Content(s"string-content-$idx", s"string-data-$idx.html", StringContent(s))
 			case ImageContentElement(p) =>
-				val c = new File(relativeDirectoryRoot + p)
-				if(!c.exists || !c.isFile)
-					throw new ParseException(s"Image-Content file '$p' nonexistant.", 0)
-				else {
-					val fname = Util pathFilename p
-					nonContent :+= Content(Util pathId p, fname, PathContent(c))
-					content :+= Content(s"image-content-$idx", s"image-data-$idx.html", StringContent(
-						s"""<center><img src="$fname" alt="$fname"></img></center>"""))
+				IncludeDirectory.find(includeOrder, p) match {
+					case None => throw new ParseException(s"Image-Content file '$p' not found.", 0)
+					case Some(dir) =>
+						val fname = dir ebookPath p
+						nonContent :+= Content(dir ebookID p, fname, PathContent(dir resolve p))
+						content :+= Content(s"image-content-$idx", s"image-data-$idx.html", StringContent(
+							s"""<center><img src="$fname" alt="$fname"></img></center>"""))
 				}
 			case NetworkImageContentElement(u) =>
 				val fname = Util urlFilename u
@@ -52,30 +51,28 @@ class Book(private val relativeDirectoryRoot: String, private val elems: Seq[Ele
 			case CoverElement(p) =>
 				if(cover != null)
 					throw new ParseException("[Network-]Cover key specified at least twice.", idx)
-				val c = new File(relativeDirectoryRoot + p)
-				if(!c.exists || !c.isFile)
-					throw new ParseException(s"Cover file '$p' nonexistant.", 0)
-				else {
-					val fname = Util pathFilename p
-					nonContent :+= Content(Util pathId p, fname, PathContent(c))
-					cover = Content(s"cover-content", s"cover-data.html", StringContent(
+				IncludeDirectory.find(includeOrder, p) match {
+					case None => throw new ParseException(s"Image-Content file '$p' not found.", 0)
+					case Some(dir) =>
+						val fname = dir ebookPath p
+						nonContent :+= Content(dir ebookID p, fname, PathContent(dir resolve p))
+						cover = Content(s"cover-content", s"cover-data.html", StringContent(
 							s"""<center><img src="$fname" alt="$fname"></img></center>"""))
 				}
 			case NetworkCoverElement(u) =>
 				if(cover != null)
 					throw new ParseException("[Network-]Cover key specified at least twice.", idx)
-				else{
+				else {
 					val fname = Util urlFilename u
 					nonContent :+= Content(s"network-cover-${Util urlId u}", fname, NetworkContent(u))
 					cover = Content(s"network-cover-content", s"network-cover-data.html", StringContent(
 						s"""<center><img src="$fname" alt="$fname"></img></center>"""))
 				}
 			case IncludeElement(p) =>
-				val c = new File(relativeDirectoryRoot + p)
-				if(!c.exists || !c.isFile)
-					throw new ParseException(s"Include file '$p' nonexistant.", 0)
-				else
-					nonContent :+= Content(Util pathId p, Util pathFilename p, PathContent(c))
+				IncludeDirectory.find(includeOrder, p) match {
+					case None => throw new ParseException(s"Image-Content file '$p' not found.", 0)
+					case Some(dir) => nonContent :+= Content(dir ebookID p, dir ebookPath p, PathContent(dir resolve p))
+				}
 			case NetworkIncludeElement(u) =>
 				nonContent :+= Content(Util urlId u, Util urlFilename u, NetworkContent(u))
 			case AuthorElement(l) =>

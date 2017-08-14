@@ -8,13 +8,13 @@ import org.junit.Test
 class UtilTests {
 	@Test
 	def pathId() {
-		assert(Util.pathId("simple/chapter_image.png") == "simple-chapter_image_png")
-		assert(Util.pathId("simple/ctnt.html") == "simple-ctnt_html")
-		assert(Util.pathId("../cover.png") == "cover_png")
-		assert(Util.pathId("relative/path/../green_ass_dog.html") == "relative-path-green_ass_dog_html")
-		assert(Util.pathId("./../relative_path_fuckery\\relative/../relative/path\\../../relative/path/dead_santa.html") ==
+		assert(Util.pathID("simple/chapter_image.png") == "simple-chapter_image_png")
+		assert(Util.pathID("simple/ctnt.html") == "simple-ctnt_html")
+		assert(Util.pathID("../cover.png") == "cover_png")
+		assert(Util.pathID("relative/path/../green_ass_dog.html") == "relative-path-green_ass_dog_html")
+		assert(Util.pathID("./../relative_path_fuckery\\relative/../relative/path\\../../relative/path/dead_santa.html") ==
 			"relative_path_fuckery-relative-relative-path-relative-path-dead_santa_html")
-		assert(Util.pathId("../cover") == "cover")
+		assert(Util.pathID("../cover") == "cover")
 	}
 
 	@Test

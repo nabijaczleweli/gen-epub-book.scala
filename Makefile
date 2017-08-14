@@ -33,19 +33,21 @@ OUTDIR := out/
 BOOK_SOURCES := $(sort $(wildcard examples/*.epupp examples/**/*.epupp examples/**/**/*.epupp examples/**/**/**/*.epupp))
 SOURCES := $(sort $(wildcard src/*.scala src/**/*.scala src/**/**/*.scala src/**/**/**/*.scala src/**/**/**/**/*.scala src/**/**/**/**/**/*.scala src/**/**/**/**/**/**/*.scala src/**/**/**/**/**/**/**/*.scala))
 
-.PHONY : all examples
+.PHONY : all examples test
 
 
-all : examples
+all : examples test
 
 clean :
 	rm -rf $(OUTDIR)
 
 examples : $(SOURCES) $(patsubst examples/%.epupp,$(OUTDIR)%.epub,$(BOOK_SOURCES)) $(patsubst examples/%.epupp,$(OUTDIR)%.mobi,$(BOOK_SOURCES))
+test : $(SOURCES)
+	$(GRADLE) test
 
 $(OUTDIR)%.mobi : $(OUTDIR)%.epub
 	$(CALIBRE_CONVERT) "$^" "$@"
 
 $(OUTDIR)%.epub : examples/%.epupp $(SOURCES)
 	@mkdir -p $(dir $@)
-	$(GRADLE) run -PappArgs="['$<', '$@']"
+	$(GRADLE) run -PappArgs="['$<', '$@', '-Irel=examples/relative_path_fuckery/relative/path']"

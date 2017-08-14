@@ -14,9 +14,11 @@ object Util {
 	private val titleRgx = Pattern.compile("""<!-- ePub title: "([^"]+)" -->""")
 	val dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
 
-	def pathId(of: String): String =
+	def pathID(of: File): String = pathID(of.getPath)
+	def pathID(of: String): String =
 		pathFilename(of).replace('.', '_')
 
+	def pathFilename(of: File): String = pathFilename(of.getPath)
 	def pathFilename(of: String): String =
 		of.replace('\\', '/').replace("../", "").replace("./", "").replace('/', '-')
 
