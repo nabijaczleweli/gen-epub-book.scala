@@ -5,7 +5,7 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 
-import scala.io.Source
+import scala.io.{Codec, Source}
 
 object Util {
 	private lazy val mimeTypeMap =
@@ -22,16 +22,18 @@ object Util {
 	def pathFilename(of: String): String =
 		of.replace('\\', '/').replace("../", "").replace("./", "").replace('/', '-')
 
-	def urlId(of: URL): String = {
+	def urlId(of: URL): String =
 		urlFilename(of).replace('.', '_')
-	}
 
 	def urlFilename(of: URL): String =
 		of.getFile.substring(of.getFile.lastIndexOf('/') + 1)
 
 	def findTitle(in: File): Option[String] =
-		(Source fromFile in).getLines map titleRgx.matcher find (_.matches) map (_ group 1)
+		Source.fromFile(in)(Codec.UTF8).getLines map titleRgx.matcher find (_.matches) map (_ group 1)
 
 	def guessMimeType(fname: String): String =
-		mimeTypeMap.getOrElse(fname substring (1 + fname lastIndexOf '.'), null)
+		fname lastIndexOf '.' match {
+			case -1 => "text/plain"
+			case idx => mimeTypeMap.getOrElse(fname substring (idx + 1), "text/plain")
+		}
 }
