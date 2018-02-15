@@ -42,3 +42,5 @@ The original in [AWK](https://github.com/nabijaczleweli/gen-epub-book).
 A rewrite in [Rust](https://github.com/nabijaczleweli/gen-epub-book.rs).
 
 A rewrite in [C++](https://github.com/nabijaczleweli/gen-epub-book.cpp).
+
+A rewrite in [JavaScript](https://github.com/nabijaczleweli/gen-epub-book.js).

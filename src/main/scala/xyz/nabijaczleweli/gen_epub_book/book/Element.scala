@@ -15,6 +15,9 @@ case class CoverElement(p: String) extends Element
 case class NetworkCoverElement(u: URL) extends Element
 case class IncludeElement(p: String) extends Element
 case class NetworkIncludeElement(u: URL) extends Element
+case class DescriptionElement(p: String) extends Element
+case class StringDescriptionElement(s: String) extends Element
+case class NetworkDescriptionElement(u: URL) extends Element
 case class AuthorElement(a: String) extends Element
 case class DateElement(d: Date) extends Element
 case class LanguageElement(l: String) extends Element
@@ -36,6 +39,9 @@ object Element {
 				case "Network-Cover" => NetworkCoverElement(new URL(ch.next))
 				case "Include" => IncludeElement(ch.next)
 				case "Network-Include" => NetworkIncludeElement(new URL(ch.next))
+				case "Description" => DescriptionElement(ch.next)
+				case "String-Description" => StringDescriptionElement(ch.next)
+				case "Network-Description" => NetworkDescriptionElement(new URL(ch.next))
 				case "Author" => AuthorElement(ch.next)
 				case "Date" => DateElement(Util.dateFormat parse ch.next)
 				case "Language" => LanguageElement(ch.next)

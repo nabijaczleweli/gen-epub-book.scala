@@ -2,6 +2,7 @@ package xyz.nabijaczleweli.gen_epub_book.book
 
 import java.io._
 import java.net.HttpURLConnection
+import java.nio.file.Files
 import java.text.ParseException
 import java.util.zip.{ZipEntry, ZipOutputStream}
 import java.util.{Date, UUID}
@@ -16,6 +17,7 @@ class Book(private val includeOrder: List[IncludeDirectory], private val elems: 
 
 	var name: String = _
 	var cover: Content = _
+	var description: ContentData = _
 	var author: String = _
 	var date: Date = _
 	var language: String = _
@@ -75,6 +77,22 @@ class Book(private val includeOrder: List[IncludeDirectory], private val elems: 
 				}
 			case NetworkIncludeElement(u) =>
 				nonContent :+= Content(Util urlId u, Util urlFilename u, NetworkContent(u))
+			case DescriptionElement(p) =>
+				if(description != null)
+					throw new ParseException("[<String|Network>-]Description key specified at least twice.", idx)
+				IncludeDirectory.find(includeOrder, p) match {
+					case None => throw new ParseException(s"Description file '$p' not found.", 0)
+					case Some(dir) =>
+						description = PathContent(dir resolve p)
+				}
+			case StringDescriptionElement(s) =>
+				if(description != null)
+					throw new ParseException("[<String|Network>-]Description key specified at least twice.", idx)
+				description = StringContent(s + '\n')
+			case NetworkDescriptionElement(u) =>
+				if(description != null)
+					throw new ParseException("[<String|Network>-]Description key specified at least twice.", idx)
+				description = NetworkContent(u)
 			case AuthorElement(l) =>
 				if(author != null)
 					throw new ParseException("Author key specified at least twice.", idx)
@@ -136,6 +154,12 @@ class Book(private val includeOrder: List[IncludeDirectory], private val elems: 
 		if(cover != null)
 			to write s"""    <meta name="cover" content="${cover.id}" />$n""".getBytes
 
+		if(description != null) {
+			to write s"""    <dc:language>$n""".getBytes
+			writeContentData(description, to, string_border = false)
+			to write s"""    </dc:language>$n""".getBytes
+		}
+
 		to write s"""  </metadata>$n""".getBytes
 		to write s"""  <manifest>$n""".getBytes
 		to write s"""    <item href="toc.ncx" id="toc" media-type="application/x-dtbncx+xml" />$n""".getBytes
@@ -184,7 +208,7 @@ class Book(private val includeOrder: List[IncludeDirectory], private val elems: 
 
 		(content.iterator filter (_.content.isInstanceOf[PathContent])
 			flatMap (e => Util findTitle e.content.asInstanceOf[PathContent].path map ((_, e.id, e.filename)))).zipWithIndex foreach { e =>
-			val ((title, id, fname), i) = e
+			val ((title, _, fname), i) = e
 			to write s"""    <navPoint id="$title" playOrder="$i">$n""".getBytes
 			to write s"""      <navLabel>$n""".getBytes
 			to write s"""        <text>$title</text>$n""".getBytes
@@ -203,23 +227,33 @@ class Book(private val includeOrder: List[IncludeDirectory], private val elems: 
 		var specFilenames: Set[String] = Nil.toSet
 		((cover :: Nil) ++ content ++ nonContent).iterator filter (_ != null) filter (e => !specFilenames.contains(e.filename)) foreach { elem =>
 			to putNextEntry new ZipEntry(elem.filename)
-
-			elem.content match {
-				case PathContent(p) =>
-					val bis = new BufferedInputStream(new FileInputStream(p))
-					to write (Stream continually bis.read takeWhile (_ != -1) map (_.toByte)).toArray
-				case NetworkContent(u) =>
-					val connection = u.openConnection().asInstanceOf[HttpURLConnection]
-					connection.setRequestMethod("GET")
-					to write (Stream continually connection.getInputStream.read takeWhile (_ != -1) map (_.toByte)).toArray
-				case StringContent(d) =>
-					to write Assets.stringContentHead.getBytes
-					to write d.getBytes
-					to write Assets.stringContentTail.getBytes
-			}
-
+			writeContentData(elem.content, to)
 			to.closeEntry()
 			specFilenames += elem.filename
+		}
+	}
+
+	private def writeContentData(whom: ContentData, to: OutputStream, string_border: Boolean = true): Unit = {
+		whom match {
+			case PathContent(p) =>
+				Files.copy(p.toPath, to)
+			case NetworkContent(u) =>
+				val connection = u.openConnection().asInstanceOf[HttpURLConnection]
+				connection.setRequestMethod("GET")
+				val istream = connection.getInputStream
+
+				val buf = new Array[Byte](4096)
+				var read = istream read buf
+				while(read != -1) {
+					to write buf
+					read = istream read buf
+				}
+			case StringContent(d) =>
+				if(string_border)
+					to write Assets.stringContentHead.getBytes
+				to write d.getBytes
+				if(string_border)
+					to write Assets.stringContentTail.getBytes
 		}
 	}
 }
