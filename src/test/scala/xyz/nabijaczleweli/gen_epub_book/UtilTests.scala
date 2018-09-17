@@ -31,7 +31,7 @@ class UtilTests {
 	@Test
 	def urlId() {
 		assert(Util.urlId(new URL("http://i.imgur.com/ViQ2WED.jpg")) == "ViQ2WED_jpg")
-		assert(Util.urlId(new URL("https://cdn.rawgit.com/nabijaczleweli/nabijaczleweli.github.io/dev/src/writing_prompts/slim_shady.png")) == "slim_shady_png")
+		assert(Util.urlId(new URL("https://rawcdn.githack.com/nabijaczleweli/nabijaczleweli.github.io/dev/src/writing_prompts/slim_shady.png")) == "slim_shady_png")
 		assert(Util.urlId(new URL("https://img09.deviantart.net/e6c8/i/2015/138/8/0/the_pursuer_by_artsed-d7lbiua.jpg")) == "the_pursuer_by_artsed-d7lbiua_jpg")
 		assert(Util.urlId(new URL("https://i.imgur.com/")) == "")
 		assert(Util.urlId(new URL("https://i.imgur.com/.png")) == "_png")
@@ -40,7 +40,7 @@ class UtilTests {
 	@Test
 	def urlFilename() {
 		assert(Util.urlFilename(new URL("http://i.imgur.com/ViQ2WED.jpg")) == "ViQ2WED.jpg")
-		assert(Util.urlFilename(new URL("https://cdn.rawgit.com/nabijaczleweli/nabijaczleweli.github.io/dev/src/writing_prompts/slim_shady.png")) == "slim_shady.png")
+		assert(Util.urlFilename(new URL("https://rawcdn.githack.com/nabijaczleweli/nabijaczleweli.github.io/dev/src/writing_prompts/slim_shady.png")) == "slim_shady.png")
 		assert(Util.urlFilename(new URL("https://img09.deviantart.net/e6c8/i/2015/138/8/0/the_pursuer_by_artsed-d7lbiua.jpg")) == "the_pursuer_by_artsed-d7lbiua.jpg")
 		assert(Util.urlFilename(new URL("https://i.imgur.com/")) == "")
 		assert(Util.urlFilename(new URL("https://i.imgur.com/.png")) == ".png")

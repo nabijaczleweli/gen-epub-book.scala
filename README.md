@@ -23,7 +23,7 @@ Modify to your liking, then, assuming you put the file in "example/test.epupp" a
 gen-epub-book.jar example/test.epupp out/test.epub
 ```
 
-For more detailed usage information and tag list, see the [original manpage](https://cdn.rawgit.com/nabijaczleweli/gen-epub-book/man/gen-epub-book.awk.1.html).
+For more detailed usage information and tag list, see the [original manpage](https://rawcdn.githack.com/nabijaczleweli/gen-epub-book/man/gen-epub-book.awk.1.html).
 
 ## Supported features
 
