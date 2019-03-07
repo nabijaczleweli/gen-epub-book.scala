@@ -124,12 +124,12 @@ class Book(private val includeOrder: List[IncludeDirectory], private val elems: 
 		val out = new ZipOutputStream(new FileOutputStream(to))
 		out setLevel 9
 
-		out putNextEntry new ZipEntry("META-INF/container.xml")
-		out write Assets.containerXMLContents.getBytes
-		out.closeEntry()
-
 		out putNextEntry new ZipEntry("mimetype")
 		out write Assets.mimeType.getBytes
+		out.closeEntry()
+
+		out putNextEntry new ZipEntry("META-INF/container.xml")
+		out write Assets.containerXMLContents.getBytes
 		out.closeEntry()
 
 		writeContentTable(out)
